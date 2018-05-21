@@ -1,15 +1,17 @@
 <template>
   <div id="app">
     <MHeader/>
+    <tab/>
     <router-view/>
   </div>
 </template>
 
 <script>
 import MHeader from 'components/m-header'
+import Tab from 'components/tab'
 export default {
   components: {
-    MHeader
+    MHeader, Tab
   }
 }
 </script>
