@@ -1,46 +1,74 @@
 <template>
   <div class="recommend">
-    <div class="recommend-content">
-      <div class="slider-wrapper" v-if="recommends.length">
-        <slider>
-          <div v-for="item in recommends" :key="item.picUrl">
-            <a :href="item.linkUrl">
-              <img :src="item.picUrl">
-            </a>
-          </div>
-        </slider>
+    <scroll ref="scroll" class="recommend-content" :data="discList">
+      <div>
+        <div class="slider-wrapper" v-if="recommends.length">
+          <slider>
+            <div v-for="item in recommends" :key="item.picUrl">
+              <a :href="item.linkUrl">
+                <img :src="item.picUrl">
+              </a>
+            </div>
+          </slider>
+        </div>
+        <div class="recommend-list">
+          <h1 class="list-title">热门歌单推荐</h1>
+          <ul>
+            <li class="item" @click="selectItem(item)" v-for="item in discList" :key="item.title">
+              <div class="icon">
+                <img width="60" height="60" v-lazy="item.cover">
+              </div>
+              <div class="text">
+                <h2 class="name" v-html="item.title"></h2>
+                <p class="desc" v-html="item.username"></p>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
-      <div class="recommend-list">
-        <h1 class="list-title">热门歌单推荐</h1>
-        <ul></ul>
+      <div class="loading-container" v-show="!discList.length">
+        <loading/>
       </div>
-    </div>
+    </scroll>
   </div>
 </template>
 <script>
-import { getRecommend } from 'api/recommend'
-import Slider from 'base/slider'
-import { ERR_OK } from 'api/config';
-
+import { getRecommend, getDiscList } from 'api/recommend'
+import slider from 'base/slider'
+import loading from 'base/loading'
+import { ERR_OK } from 'api/config'
+import scroll from 'base/scroll'
 export default {
   components: {
-    Slider
+    slider, scroll, loading
   },
   data() {
     return {
-      recommends: []
+      recommends: [],
+      discList: []
     }
   },
   created() {
     this._getRecommend()
+    this._getDiscList()
   },
   methods: {
     _getRecommend() {
       getRecommend().then((res) => {
-        if (res.code===ERR_OK) {
+        if (res.code === ERR_OK) {
           this.recommends = res.data.slider
         }
       })
+    },
+    _getDiscList() {
+      getDiscList().then((res) => {
+        if (res.code === ERR_OK) {
+          this.discList = res.recomPlaylist.data.v_hot
+        }
+      })
+    },
+    selectItem(item) {
+      console.log(item)
     }
   }
 }
