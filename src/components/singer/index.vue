@@ -1,8 +1,78 @@
 <template>
-  <div>歌手页面</div>
+  <div class="singer">
+    <listview :data="singerList" />
+  </div>
 </template>
 <script>
-export default {
+import { getSingerList } from 'api/singer'
+import { ERR_OK } from 'api/config'
+import Singer from 'common/js/singer'
+import listview from 'base/listview'
 
+const HOT_NAME = '热门'
+const HOT_SINGER_LENGTH = 10
+export default {
+  data() {
+    return {
+      singerList: []
+    }
+  },
+  components: {
+    listview
+  },
+  created() {
+    this._getSingerList()
+  },
+  methods: {
+    _getSingerList() {
+      getSingerList().then((res) => {
+        if (res.code === ERR_OK) {
+          this.singerList = this._normalizeSinger(res.data.list)
+        }
+      })
+    },
+    _normalizeSinger(list) {
+      let map = []
+      let hot = []
+      list.forEach((item, index) => {
+        if (index < HOT_SINGER_LENGTH) {
+          hot.push(new Singer({
+            id: item.Fsinger_mid,
+            name: item.Fsinger_name
+          }))
+        }
+
+        let key = map.findIndex(v => v.title === item.Findex)
+        if (key < 0) {
+          map.push({
+            title: item.Findex,
+            items: []
+          })
+          key = map.length - 1
+        }
+        map[key].items.push(new Singer({
+          id: item.Fsinger_mid,
+          name: item.Fsinger_name
+        }))
+      })
+
+      map.sort((a, b) => {
+        return a.title.charCodeAt(0) - b.title.charCodeAt(0)
+      })
+
+      map.unshift({
+        title: HOT_NAME,
+        items: hot
+      })
+      return map
+    }
+  },
 }
 </script>
+<style lang="stylus">
+.singer
+  position: fixed
+  top: 88px
+  bottom: 0
+  width: 100%
+</style>

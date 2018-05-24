@@ -7,9 +7,9 @@
 import BScroll from 'better-scroll'
 export default {
   props: {
-    probType: {
+    probeType: {
       type: Number,
-      default: 1
+      default: 3
     },
     click: {
       type: Boolean,
@@ -18,6 +18,10 @@ export default {
     data: {
       type: Array,
       default: null
+    },
+    listenScroll: {
+      type: Boolean,
+      default: false
     }
   },
   mounted() {
@@ -31,9 +35,14 @@ export default {
         return
       }
       this.scroll = new BScroll(this.$refs.wrapper, {
-        probType: this.probType,
+        probeType: this.probeType,
         click: this.click,
       })
+      if (this.listenScroll) {
+        this.scroll.on('scroll', (pos) => {
+          this.$emit('scroll', pos)
+        })
+      }
     },
     enable() {
       this.scroll && this.scroll.enable()
@@ -43,6 +52,12 @@ export default {
     },
     refresh() {
       this.scroll && this.scroll.refresh()
+    },
+    scrollTo() {
+      this.scroll && this.scroll.scrollTo.apply(this.scroll, arguments)
+    },
+    scrollToElement() {
+      this.scroll && this.scroll.scrollToElement.apply(this.scroll, arguments)
     }
   },
   watch: {
