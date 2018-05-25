@@ -13,8 +13,11 @@
     </ul>
     <div class="list-shortcut" @touchstart="onShortcutTouchStart" @touchmove.stop="onShortcutTouchMove">
       <ul>
-        <li class="item" :class="{current:currentIndex===i}" v-for="(item,i) in shortcutList" :key="i" :data-index="i">{{item}}</li>
+        <li class="item" :class="{current:currentIndex===i}" v-for="(item,i) in shortcutList" :key="i" :data-index="i">{{item.substring(0, 1)}}</li>
       </ul>
+    </div>
+    <div class="list-fixed">
+      <h1 class="fixed-title" v-show="fixedtitle" ref="fixedtitle">{{fixedtitle}}</h1>
     </div>
   </scroll>
 
@@ -23,6 +26,7 @@
 import Scroll from 'base/scroll'
 import { getData } from 'common/js/dom'
 const ANCHOR_HEIGHT = 18
+const TITLE_HEIGHT = 30
 export default {
   components: {
     Scroll
@@ -38,14 +42,21 @@ export default {
   data() {
     return {
       scrollY: -1,
-      currentIndex: 0
+      currentIndex: 0,
+      diff: -1
     }
   },
   computed: {
     shortcutList() {
       return this.data.map((v) => {
-        return v.title.substring(0, 1)
+        return v.title
       })
+    },
+    fixedtitle() {
+      if (this.scrollY > 0) {
+        return ''
+      }
+      return this.shortcutList[this.currentIndex] ? this.shortcutList[this.currentIndex] : ''
     }
   },
   created() {
@@ -106,9 +117,18 @@ export default {
         const height2 = listHeight[i + 1]
         if (-newY >= height1 && -newY < height2) {
           this.currentIndex = i
+          this.diff = height2 + newY
           return
         }
       }
+    },
+    diff(newval) {
+      let fixedTop = (newval > 0 && newval < TITLE_HEIGHT) ? newval - TITLE_HEIGHT : 0
+      if (this.fixedTop === fixedTop) {
+        return
+      }
+      this.fixedTop = fixedTop
+      this.$refs.fixedtitle.style.transform = `translate3d(0,${this.fixedTop}px,0)`
     }
   }
 }
