@@ -4,7 +4,7 @@
       <li class="list-group" ref="listGroup" v-for="(group,i) in data" :key="i">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li class="list-group-item" v-for="(item,j) in group.items" :key="j">
+          <li class="list-group-item" v-for="(item,j) in group.items" :key="j" @click="selectItem(item)">
             <img class="avatar" v-lazy="item.avatar" />
             <span class="name">{{item.name}}</span>
           </li>
@@ -82,6 +82,9 @@ export default {
     scroll(pos) {
       this.scrollY = pos.y
     },
+    selectItem(item) {
+      this.$emit('select', item)
+    },
     _calculateHeight() {
       this.listHeight = []
       const list = this.$refs.listGroup
@@ -128,7 +131,7 @@ export default {
         return
       }
       this.fixedTop = fixedTop
-      this.$refs.fixedtitle.style.transform = `translate3d(0,${this.fixedTop}px,0)`
+      this.$refs.fixedtitle.style.transform = `translate3d(0,${this.fixedTop}px,01)`
     }
   }
 }
