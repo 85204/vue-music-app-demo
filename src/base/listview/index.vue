@@ -34,9 +34,7 @@ export default {
   props: {
     data: {
       type: Array,
-      default() {
-        return []
-      }
+      default() { return [] }
     }
   },
   data() {
@@ -131,7 +129,7 @@ export default {
         return
       }
       this.fixedTop = fixedTop
-      this.$refs.fixedtitle.style.transform = `translate3d(0,${this.fixedTop}px,01)`
+      this.$refs.fixedtitle.style.transform = `translate3d(0,${this.fixedTop}px,0)`
     }
   }
 }
