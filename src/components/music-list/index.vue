@@ -4,7 +4,7 @@
       <i class="icon-back"></i>
     </div>
     <h1 class="title" v-html="title"></h1>
-    <div class="image-banner" :style="bgStyle">
+    <div class="image-banner" :style="bgStyle" ref="banner">
       <div class="filter"></div>
     </div>
     <div class="bg-image" :style="bgStyle" ref="bgImage">
@@ -32,7 +32,11 @@
 import scroll from 'base/scroll'
 import songList from 'base/song-list'
 import loading from 'base/loading'
+import { prefixStyle } from 'common/js/dom'
+
 const RESERVE_HEIGHT = 40
+const transform = prefixStyle('transform')
+// const backdrop = prefixStyle('backdrop-filter')
 export default {
   props: {
     bgImage: {
@@ -73,6 +77,9 @@ export default {
   },
   methods: {
     random() {
+      console.log('random')
+    },
+    selectItem(){
 
     },
     scroll(e) {
@@ -85,9 +92,9 @@ export default {
   watch: {
     scrollY(newY) {
       if (this.titleHeight + newY >= 0) {
-        this.$refs.layer.style.transform = `translate3d(0,${newY}px,0)`
+        this.$refs.layer.style[transform] = `translate3d(0,${newY}px,0)`
       } else {
-        this.$refs.layer.style.transform = `translate3d(0,${-this.titleHeight}px,0)`
+        this.$refs.layer.style[transform] = `translate3d(0,${-this.titleHeight}px,0)`
       }
       let scale = 1
       const percent = Math.abs(newY / this.imageHeight)
@@ -95,11 +102,13 @@ export default {
         scale = 1 + percent
         this.$refs.layer.style.zIndex = 0
         this.$refs.list.$el.style.zIndex = 0
+        this.$refs.banner.style.display = 'none'
       } else {
         this.$refs.layer.style.zIndex = 27
         this.$refs.list.$el.style.zIndex = 28
+        this.$refs.banner.style.display = ''
       }
-      this.$refs.bgImage.style.transform = `scale(${scale})`
+      this.$refs.bgImage.style[transform] = `scale(${scale})`
     }
   }
 }
