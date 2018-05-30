@@ -33,6 +33,7 @@ import scroll from 'base/scroll'
 import songList from 'base/song-list'
 import loading from 'base/loading'
 import { prefixStyle } from 'common/js/dom'
+import { mapActions } from 'vuex'
 
 const RESERVE_HEIGHT = 40
 const transform = prefixStyle('transform')
@@ -79,12 +80,18 @@ export default {
     random() {
       console.log('random')
     },
-    selectItem(){
-
+    selectItem(song, index) {
+      this.selectPlay({
+        list: this.songs,
+        index: index
+      })
     },
     scroll(e) {
       this.scrollY = e.y
-    }
+    },
+    ...mapActions([
+      'selectPlay'
+    ])
   },
   components: {
     scroll, songList, loading
