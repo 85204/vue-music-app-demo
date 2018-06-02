@@ -37,11 +37,11 @@
             <span class="dot" :class="{'active':currentShow==='lyric'}"></span>
           </div>
           <div class="progress-wrapper">
-            <!-- <span class="time time-l">{{format(currentTime)}}</span> -->
+            <span class="time time-l">{{format(currentTime)}}</span>
             <div class="progress-bar-wrapper">
-              <!-- <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar> -->
+              <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
             </div>
-            <!-- <span class="time time-r">{{format(currentSong.duration)}}</span> -->
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
             <div class="icon i-left" @click="changeMode">
@@ -81,7 +81,7 @@
       </div>
     </transition>
     <!-- <playlist ref="playlist"></playlist> -->
-    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"></audio>
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updateTime"></audio>
   </div>
 </template>
 
@@ -89,6 +89,7 @@
 import { mapGetters, mapMutations } from 'vuex'
 import animations from 'create-keyframe-animation'
 import { prefixStyle } from 'common/js/dom'
+import progressBar from "base/progress-bar"
 
 const transform = prefixStyle('transform')
 
@@ -106,6 +107,9 @@ export default {
     disableCls() {
       return this.songReady ? '' : 'disable'
     },
+    percent() {
+      return this.currentTime / this.currentSong.duration
+    },
     ...mapGetters([
       'fullScreen',
       'playlist',
@@ -118,13 +122,31 @@ export default {
     return {
       iconMode: {},
       currentShow: '',
-      songReady: false
+      songReady: false,
+      currentTime: 0
     }
   },
   mounted() {
     // console.log(this.currentIndex)
   },
   methods: {
+    updateTime(e) {
+      this.currentTime = e.target.currentTime
+    },
+    format(interval) {
+      interval = interval | 0
+      let minute = interval / 60 | 0
+      let secend = this._pad(interval % 60)
+      return `${minute}:${secend}`
+    },
+    _pad(num, n = 2) {
+      let len = num.toString().length
+      while (len < n) {
+        num = '0' + num
+        len++
+      }
+      return num
+    },
     back() {
       this.setFullScreen(false)
     },
@@ -174,8 +196,11 @@ export default {
     middleTouchEnd() {
 
     },
-    onProgressBarChange() {
-
+    onProgressBarChange(percent) {
+      this.$refs.audio.currentTime = this.currentSong.duration * percent
+      if (!this.playing) {
+        this.togglePlaying()
+      }
     },
     changeMode() {
 
@@ -207,7 +232,9 @@ export default {
         index = this.playlist.length - 1
       }
       this.setCurrentIndex(index)
-      this.setPlayingState(true)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
       this.songReady = false
     },
     next() {
@@ -219,7 +246,9 @@ export default {
         index = 0
       }
       this.setCurrentIndex(index)
-      this.setPlayingState(true)
+      if (!this.playing) {
+        this.togglePlaying()
+      }
       this.songReady = false
     },
     ready() {
@@ -257,6 +286,9 @@ export default {
         newPlaying ? audio.play() : audio.pause()
       })
     }
+  },
+  components: {
+    progressBar
   }
 }
 </script>
