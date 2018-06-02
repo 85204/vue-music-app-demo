@@ -48,13 +48,13 @@
               <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class="disableCls">
-              <i class="icon-prev"></i>
+              <i class="icon-prev" @click="prev"></i>
             </div>
             <div class="icon i-center" :class="disableCls">
-              <i :class="playIcon"></i>
+              <i :class="playIcon" @click="togglePlaying"></i>
             </div>
             <div class="icon i-right" :class="disableCls">
-              <i class="icon-next"></i>
+              <i class="icon-next" @click="next"></i>
             </div>
             <div class="icon i-right">
               <i @click="toggleFavorite(currentSong)" class="icon" :class="getFavoriteIcon(currentSong)"></i>
@@ -73,6 +73,7 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
+          <i @click.stop="togglePlaying" class="/*icon-mini*/" :class="miniIcon"></i>
         </div>
         <div class="control" @click.stop="showPlaylist">
           <i class="icon-playlist"></i>
@@ -80,7 +81,7 @@
       </div>
     </transition>
     <!-- <playlist ref="playlist"></playlist> -->
-    <!-- <audio ref="audio" :src="currentSong.url" @play="ready" @error="error" @timeupdate="updateTime" @ended="end"></audio> -->
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error"></audio>
   </div>
 </template>
 
@@ -93,19 +94,31 @@ const transform = prefixStyle('transform')
 
 export default {
   computed: {
+    cdCls() {
+      return this.playing ? 'play' : 'play pause'
+    },
+    playIcon() {
+      return this.playing ? 'icon-pause' : 'icon-play'
+    },
+    miniIcon() {
+      return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
+    },
+    disableCls() {
+      return this.songReady ? '' : 'disable'
+    },
     ...mapGetters([
       'fullScreen',
       'playlist',
-      'currentSong'
+      'currentSong',
+      'playing',
+      'currentIndex'
     ])
   },
   data() {
     return {
-      cdCls: {},
-      disableCls: {},
-      playIcon: {},
       iconMode: {},
-      currentShow: ''
+      currentShow: '',
+      songReady: false
     }
   },
   mounted() {
@@ -179,6 +192,42 @@ export default {
     showPlaylist() {
 
     },
+    play() {
+
+    },
+    togglePlaying() {
+      this.setPlayingState(!this.playing)
+    },
+    prev() {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex - 1
+      if (index < 0) {
+        index = this.playlist.length - 1
+      }
+      this.setCurrentIndex(index)
+      this.setPlayingState(true)
+      this.songReady = false
+    },
+    next() {
+      if (!this.songReady) {
+        return
+      }
+      let index = this.currentIndex + 1
+      if (index > this.playlist.length - 1) {
+        index = 0
+      }
+      this.setCurrentIndex(index)
+      this.setPlayingState(true)
+      this.songReady = false
+    },
+    ready() {
+      this.songReady = true
+    },
+    error() {
+      this.songReady = true
+    },
     _getPosAndScale() {
       const targetWidth = 40
       const paddingLeft = 40
@@ -191,8 +240,23 @@ export default {
       return { x, y, scale }
     },
     ...mapMutations({
-      setFullScreen: 'SET_FULL_SCREEN'
+      setFullScreen: 'SET_FULL_SCREEN',
+      setPlayingState: 'SET_PLAYING_STATE',
+      setCurrentIndex: 'SET_CURRENT_INDEX'
     })
+  },
+  watch: {
+    currentSong() {
+      this.$nextTick(() => {
+        this.$refs.audio.play()
+      })
+    },
+    playing(newPlaying) {
+      this.$nextTick(() => {
+        const audio = this.$refs.audio
+        newPlaying ? audio.play() : audio.pause()
+      })
+    }
   }
 }
 </script>
