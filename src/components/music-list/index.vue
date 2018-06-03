@@ -78,7 +78,9 @@ export default {
   },
   methods: {
     random() {
-      console.log('random')
+      this.randomPlay({
+        list: this.songs
+      })
     },
     selectItem(song, index) {
       this.selectPlay({
@@ -90,7 +92,8 @@ export default {
       this.scrollY = e.y
     },
     ...mapActions([
-      'selectPlay'
+      'selectPlay',
+      'randomPlay'
     ])
   },
   components: {
