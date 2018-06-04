@@ -23,13 +23,13 @@
               <!-- <div class="playing-lyric">{{playingLyric}}</div> -->
             </div>
           </div>
-          <!-- <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+          <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
             <div class="lyric-wrapper">
               <div v-if="currentLyric">
                 <p ref="lyricLine" class="text" :class="{'current': currentLineNum ===index}" v-for="(line,index) in currentLyric.lines" :key="index">{{line.txt}}</p>
               </div>
             </div>
-          </scroll> -->
+          </scroll>
         </div>
         <div class="bottom">
           <div class="dot-wrapper">
@@ -95,8 +95,11 @@ import progressBar from 'base/progress-bar'
 import progressCircle from 'base/progress-circle'
 import { playMode } from 'common/js/config'
 import { shuffle } from 'common/js/util'
+import LyricParser from 'lyric-parser'
+import scroll from 'base/scroll'
 
 const transform = prefixStyle('transform')
+const transition = prefixStyle('transition')
 
 export default {
   computed: {
@@ -137,10 +140,15 @@ export default {
   },
   data() {
     return {
-      currentShow: '',
+      currentShow: 'cd',
       songReady: false,
-      currentTime: 0
+      currentTime: 0,
+      currentLyric: null,
+      currentLineNum: 0
     }
+  },
+  created() {
+    this.touch = {}
   },
   methods: {
     updateTime(e) {
@@ -200,14 +208,53 @@ export default {
       this.$refs.cdWrapper.style.transition = ''
       this.$refs.cdWrapper.style[transform] = ''
     },
-    middleTouchStart() {
-
+    middleTouchStart(e) {
+      this.touch.initiated = true
+      this.touch.startX = e.touches[0].pageX
+      this.touch.startY = e.touches[0].pageY
     },
-    middleTouchMove() {
-
+    middleTouchMove(e) {
+      if (!this.touch.initiated) {
+        return
+      }
+      const touch = e.touches[0]
+      const deltaX = touch.pageX - this.touch.startX
+      const deltaY = touch.pageY - this.touch.startY
+      if (Math.abs(deltaY) > Math.abs(deltaX)) {
+        return
+      }
+      const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
+      const offestWidth = Math.min(0, Math.max(-window.innerWidth, left + deltaX))
+      this.touch.percent = Math.abs(offestWidth / window.innerWidth)
+      this.$refs.lyricList.$el.style[transition] = 'all 0s'
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offestWidth}px,0,0)`
+      this.$refs.middleL.style[transition] = 'all 0s'
+      this.$refs.middleL.style.opacity = 1 - this.touch.percent
     },
     middleTouchEnd() {
-
+      let offestWidth
+      this.$refs.middleL.style[transition] = 'all 0.3s'
+      if (this.currentShow === 'cd') {
+        if (this.touch.percent > 0.1) {
+          offestWidth = -window.innerWidth
+          this.currentShow = 'lyric'
+          this.$refs.middleL.style.opacity = 0
+        } else {
+          offestWidth = 0
+          this.$refs.middleL.style.opacity = 1
+        }
+      } else {
+        if (this.touch.percent < 0.9) {
+          offestWidth = 0
+          this.currentShow = 'cd'
+          this.$refs.middleL.style.opacity = 1
+        } else {
+          offestWidth = -window.innerWidth
+          this.$refs.middleL.style.opacity = 0
+        }
+      }
+      this.$refs.lyricList.$el.style[transition] = 'all 0.3s'
+      this.$refs.lyricList.$el.style[transform] = `translate3d(${offestWidth}px,0,0)`
     },
     onProgressBarChange(percent) {
       this.$refs.audio.currentTime = this.currentSong.duration * percent
@@ -294,6 +341,18 @@ export default {
     error() {
       this.songReady = true
     },
+    handleLyric({ lineNum, txt }) {
+      this.currentLineNum = lineNum
+      console.log(lineNum)
+      this.$nextTick(() => {
+        if (lineNum > 5) {
+          let lineEl = this.$refs.lyricLine[lineNum - 5]
+          this.$refs.lyricList.scrollToElement(lineEl, 1000)
+        } else {
+          this.$refs.lyricList.scrollTo(0, 0, 1000)
+        }
+      })
+    },
     _getPosAndScale() {
       const targetWidth = 40
       const paddingLeft = 40
@@ -321,16 +380,35 @@ export default {
       this.$nextTick(() => {
         this.$refs.audio.play()
       })
+      this.lyricReady = false
+      if (this.currentLyric) {
+        this.currentLyric.stop()
+      }
+      newsong.getLyric().then((lyric) => {
+        this.currentLyric = new LyricParser(lyric, this.handleLyric)
+        this.currentLyric.play()
+        this.lyricReady = true
+      })
     },
     playing(newPlaying) {
       this.$nextTick(() => {
         const audio = this.$refs.audio
-        newPlaying ? audio.play() : audio.pause()
+        if (newPlaying) {
+          audio.play()
+          if (this.lyricReady) {
+            this.currentLyric.togglePlay()
+          }
+        } else {
+          audio.pause()
+          if (this.lyricReady) {
+            this.currentLyric.togglePlay()
+          }
+        }
       })
     }
   },
   components: {
-    progressBar, progressCircle
+    progressBar, progressCircle, scroll
   }
 }
 </script>
