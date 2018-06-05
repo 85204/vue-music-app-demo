@@ -25,6 +25,8 @@
 <script>
 import Scroll from 'base/scroll'
 import { getData } from 'common/js/dom'
+import { playListMixin } from 'common/js/mixin'
+
 const ANCHOR_HEIGHT = 18
 const TITLE_HEIGHT = 30
 export default {
@@ -83,6 +85,11 @@ export default {
     selectItem(item) {
       this.$emit('select', item)
     },
+    handlePlaylist(list) {
+      // const bottom = list.length > 0 ? '60px' : ''
+      // this.$refs.listview.$el.style.bottom = bottom
+      this.$refs.listview.refresh()
+    },
     _calculateHeight() {
       this.listHeight = []
       const list = this.$refs.listGroup
@@ -131,7 +138,8 @@ export default {
       this.fixedTop = fixedTop
       this.$refs.fixedtitle.style.transform = `translate3d(0,${this.fixedTop}px,0)`
     }
-  }
+  },
+  mixins: [playListMixin]
 }
 </script>
 <style lang="stylus" scoped>

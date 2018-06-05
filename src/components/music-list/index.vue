@@ -34,6 +34,7 @@ import songList from 'base/song-list'
 import loading from 'base/loading'
 import { prefixStyle } from 'common/js/dom'
 import { mapActions } from 'vuex'
+import { playListMixin } from 'common/js/mixin'
 
 const RESERVE_HEIGHT = 40
 const transform = prefixStyle('transform')
@@ -91,6 +92,11 @@ export default {
     scroll(e) {
       this.scrollY = e.y
     },
+    handlePlaylist(list) {
+      const bottom = list.length > 0 ? '60px' : ''
+      this.$refs.list.$el.style.bottom = bottom
+      this.$refs.list.refresh()
+    },
     ...mapActions([
       'selectPlay',
       'randomPlay'
@@ -120,7 +126,10 @@ export default {
       }
       this.$refs.bgImage.style[transform] = `scale(${scale})`
     }
-  }
+  },
+  mixins: [
+    playListMixin
+  ]
 }
 </script>
 

@@ -20,7 +20,7 @@
               </div>
             </div>
             <div class="playing-lyric-wrapper">
-              <!-- <div class="playing-lyric">{{playingLyric}}</div> -->
+              <div class="playing-lyric">{{playingLyric}}</div>
             </div>
           </div>
           <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
@@ -144,7 +144,8 @@ export default {
       songReady: false,
       currentTime: 0,
       currentLyric: null,
-      currentLineNum: 0
+      currentLineNum: 0,
+      playingLyric: ''
     }
   },
   created() {
@@ -257,9 +258,13 @@ export default {
       this.$refs.lyricList.$el.style[transform] = `translate3d(${offestWidth}px,0,0)`
     },
     onProgressBarChange(percent) {
-      this.$refs.audio.currentTime = this.currentSong.duration * percent
+      const currentTime = this.currentSong.duration * percent
+      this.$refs.audio.currentTime = currentTime
       if (!this.playing) {
         this.togglePlaying()
+      }
+      if (this.currentLyric) {
+        this.currentLyric.seek(currentTime * 1000)
       }
     },
     changeMode() {
@@ -303,12 +308,19 @@ export default {
     loop() {
       this.$refs.audio.currentTime = 0
       this.$refs.audio.play()
+      if (this.currentLyric) {
+        this.currentLyric.seek(0)
+      }
     },
     togglePlaying() {
       this.setPlayingState(!this.playing)
     },
     prev() {
       if (!this.songReady) {
+        return
+      }
+      if (this.playlist.length === 1) {
+        this.loop()
         return
       }
       let index = this.currentIndex - 1
@@ -323,6 +335,10 @@ export default {
     },
     next() {
       if (!this.songReady) {
+        return
+      }
+      if (this.playlist.length === 1) {
+        this.loop()
         return
       }
       let index = this.currentIndex + 1
@@ -352,6 +368,7 @@ export default {
           this.$refs.lyricList.scrollTo(0, 0, 1000)
         }
       })
+      this.playingLyric = txt
     },
     _getPosAndScale() {
       const targetWidth = 40
@@ -384,11 +401,17 @@ export default {
       if (this.currentLyric) {
         this.currentLyric.stop()
       }
-      newsong.getLyric().then((lyric) => {
-        this.currentLyric = new LyricParser(lyric, this.handleLyric)
-        this.currentLyric.play()
-        this.lyricReady = true
-      })
+      newsong.getLyric()
+        .then((lyric) => {
+          this.currentLyric = new LyricParser(lyric, this.handleLyric)
+          this.currentLyric.play()
+          this.lyricReady = true
+        })
+        .catch(() => {
+          this.currentLyric = null
+          this.currentTime = 0
+          this.playingLyric = ''
+        })
     },
     playing(newPlaying) {
       this.$nextTick(() => {
