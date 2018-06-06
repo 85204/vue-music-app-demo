@@ -30,6 +30,7 @@
         <loading/>
       </div>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 <script>
@@ -39,6 +40,7 @@ import loading from 'base/loading'
 import { ERR_OK } from 'api/config'
 import scroll from 'base/scroll'
 import { playListMixin } from 'common/js/mixin'
+import { mapMutations } from 'vuex'
 
 export default {
   components: {
@@ -70,13 +72,19 @@ export default {
       })
     },
     selectItem(item) {
-      console.log(item)
+      this.setDisc(item)
+      this.$router.push({
+        path: `/recommend/${item.content_id}`
+      })
     },
     handlePlaylist(list) {
       const bottom = list.length > 0 ? '60px' : ''
       this.$refs.recommend.style.bottom = bottom
       this.$refs.scroll.refresh()
     },
+    ...mapMutations({
+      setDisc: 'SET_DISC'
+    })
   },
   mixins: [playListMixin]
 }
