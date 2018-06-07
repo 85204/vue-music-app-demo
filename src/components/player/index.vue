@@ -359,7 +359,6 @@ export default {
     },
     handleLyric({ lineNum, txt }) {
       this.currentLineNum = lineNum
-      console.log(lineNum)
       this.$nextTick(() => {
         if (lineNum > 5) {
           let lineEl = this.$refs.lyricLine[lineNum - 5]
