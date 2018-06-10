@@ -26,7 +26,7 @@ export default {
       this.query = ''
     },
     setQuery(query) {
-      this.query = query
+      this.query = query.trim()
     },
     blur() {
       this.$refs.query.blur()

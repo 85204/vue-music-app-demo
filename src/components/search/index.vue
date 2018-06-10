@@ -27,7 +27,7 @@
       </scroll>
     </div>
     <div class="search-result" v-show="query" ref="searchResult">
-      <suggest ref="suggest" :query="query" @listScroll="blurInput"></suggest>
+      <suggest ref="suggest" :query="query" @listScroll="blurInput" @select="saveSearch"></suggest>
     </div>
     <router-view></router-view>
   </div>
@@ -71,7 +71,10 @@ export default {
     // showConfirm() {
     //   this.$refs.confirm.show()
     // },
-    blurInput(){
+    saveSearch() {
+      this.saveSearchHistory(this.query)
+    },
+    blurInput() {
       this.$refs.searchBox.blur()
     },
     addQuery(k) {
@@ -89,7 +92,8 @@ export default {
       })
     },
     ...mapActions([
-      'clearSearchHistory'
+      'clearSearchHistory',
+      'saveSearchHistory'
     ])
   },
   watch: {
